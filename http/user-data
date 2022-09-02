@@ -1,0 +1,59 @@
+#cloud-config
+autoinstall:
+  version: 1
+
+  early-commands:
+    - systemctl stop ssh # otherwise packer tries to connect too early and exceeds max attempts
+
+  identity:
+    hostname: "ubuntu22-dev"
+    username: "vagrant"
+    # passord is `vagrant`
+    password: "$6$CG/3wG6U6vagDFjC$WjSNjZaL/CqK/8SwMO0ARqvY614BG2LceS9ZEGr6K9PQhIDnNmlZVEG6z2LmoDYK0XYtP7emnR5Pte4j7DUoA0"
+
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+    variant: querty
+  storage:
+    layout:
+      name: lvm
+
+  apt:
+    preserve_sources_list: false
+    geoip: true
+    primary:
+    - arches: "[default]"
+      uri: "http://ports.ubuntu.com/ubuntu-ports"
+    - arches: "[amd64, i386]"
+      uri: "mirror://mirrors.ubuntu.com/mirrors.txt"
+
+  ssh:
+    allow-pw: true
+    install-server: true
+
+  user-data:
+    disable_root: false
+
+  packages:
+    - haveged
+    - sysstat
+    - apt-transport-https
+    - net-tools
+    - netcat
+    - traceroute
+    - telnet
+    - dkms
+
+  late-commands:
+    - echo 'Defaults:vagrant !requiretty' > /target/etc/sudoers.d/vagrant
+    - echo 'vagrant ALL=(ALL) NOPASSWD:ALL' >> /target/etc/sudoers.d/vagrant
+    - chmod 0440 /target/etc/sudoers.d/vagrant
+    - curtin in-target --target=/target -- apt-get update
+    - curtin in-target --target=/target -- apt-get -y upgrade
+    - curtin in-target --target=/target -- apt-get -y autoremove
+    - curtin in-target --target=/target -- apt-get autoclean
+    - curtin in-target --target=/target -- apt-get clean
+    - curtin in-target --target=/target -- rm -rf /var/lib/apt/lists/*
+    - echo 'APT::Periodic::Enable "0";' >> /target/etc/apt/apt.conf.d/10periodic
+    

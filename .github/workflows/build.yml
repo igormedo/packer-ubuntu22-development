@@ -1,0 +1,41 @@
+---
+
+name: Packer Build
+
+on:
+  push:
+    # branches:
+    #   - main
+    #   - 'releases/**'
+
+jobs:
+  packer:
+    runs-on: ubuntu-latest
+    name: packer
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # validate templates
+      - name: Validate Template
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: validate
+          arguments: -syntax-only
+          target: packer.pkr.hcl
+
+      - name: virtualbox - packer build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git bash openssl curl zip 
+          sudo add-apt-repository multiverse 
+          sudo apt-get update
+          sudo apt install -y virtualbox linux-headers-generic
+          sudo dpkg-reconfigure virtualbox-dkms
+          curl -SL https://releases.hashicorp.com/packer/1.8.3/packer_1.8.3_linux_amd64.zip -o packer_1.8.3_linux_amd64.zip
+          unzip packer_1.8.3_linux_amd64.zip
+          ./packer init packer.pkr.hcl
+          ./packer build packer.pkr.hcl
+        env:
+          PACKER_LOG: 1
