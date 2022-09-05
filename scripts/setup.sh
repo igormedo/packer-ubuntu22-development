@@ -4,6 +4,8 @@
 
 echo "Running setup.sh"
 
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+
 echo "Installing VirtualBox guest additions"
 
 apt-get install -y linux-headers-$(uname -r) build-essential perl

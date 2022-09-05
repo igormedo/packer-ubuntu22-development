@@ -11,6 +11,30 @@ packer {
   }    
 }
 
+variable "vagrant_box_name" {
+  type    = string
+  default = "${env("VAGRANT_BOX_NAME")}"
+}
+
+variable "vagrant_box_version" {
+  type    = string
+  default = "${env("VAGRANT_BOX_VERSION")}"
+}
+
+variable "vagrant_box_description" {
+  type    = string
+  default = "${env("VAGRANT_BOX_DESCRIPTION")}"
+}
+
+variable "vagrantcloud_user" {
+  type    = string
+  default = "${env("VAGRANTCLOUD_USER")}"
+}
+
+variable "vagrantcloud_token" {
+  type    = string
+  default = "${env("VAGRANTCLOUD_TOKEN")}"
+}
 
 source "virtualbox-iso" "ubuntu22-dev" {
   vm_name = "ubuntu22-dev"
@@ -107,7 +131,16 @@ build {
   post-processors {
     post-processor "vagrant" {
       compression_level = 9
-      output            = "build/ubuntu22-dev-0.0.1.box"
+      output            = "build/${var.vagrant_box_name}-${var.vagrant_box_version}.box"
+    }
+
+    post-processor "vagrant-cloud" {
+      access_token        = "${var.vagrantcloud_token}"
+      version             = "${var.vagrant_box_version}"
+      version_description = "${var.vagrant_box_description}"
+      box_tag             = "${var.vagrantcloud_user}/${var.vagrant_box_name}"
+      no_release          = true
+      keep_input_artifact = true
     }
   }
 }
